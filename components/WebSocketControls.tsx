@@ -16,7 +16,7 @@ export function WebSocketControls({
   onDisconnect,
   onClearTrades
 }: WebSocketControlsProps) {
-  const [url, setUrl] = useState('wss://stream.binance.com:9443/ws/btcusdt@trade')
+  const [url, setUrl] = useState('wss://websocket-trading-feed.onrender.com')
 
   const handleConnect = () => {
     if (url.trim()) {

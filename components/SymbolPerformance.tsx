@@ -1,13 +1,16 @@
 'use client'
 
 import { Trade, SymbolStats } from '@/types/trade'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 interface SymbolPerformanceProps {
   trades: Trade[]
 }
 
 export function SymbolPerformance({ trades }: SymbolPerformanceProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 5 // Show 5 symbols per page
+  
   const symbolStats = useMemo<SymbolStats[]>(() => {
     const performanceMap = new Map<string, SymbolStats>()
 
@@ -41,7 +44,6 @@ export function SymbolPerformance({ trades }: SymbolPerformanceProps) {
 
     return Array.from(performanceMap.values())
       .sort((a, b) => b.totalVolume - a.totalVolume)
-      .slice(0, 10)
   }, [trades])
 
   const formatNumber = (num: number) => {
@@ -65,6 +67,20 @@ export function SymbolPerformance({ trades }: SymbolPerformanceProps) {
     return `${(ratio * 100).toFixed(1)}%`
   }
 
+  // Pagination calculations
+  const totalPages = Math.ceil(symbolStats.length / pageSize)
+  const startIdx = (currentPage - 1) * pageSize
+  const endIdx = startIdx + pageSize
+  const currentPageStats = symbolStats.slice(startIdx, endIdx)
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1))
+  }
+
   if (symbolStats.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-6">
@@ -78,49 +94,74 @@ export function SymbolPerformance({ trades }: SymbolPerformanceProps) {
 
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">Symbol Performance</h3>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-divider">
-              <th className="text-left py-3 pr-4 text-text-secondary font-medium">Symbol</th>
-              <th className="text-right py-3 px-3 text-text-secondary font-medium">Volume</th>
-              <th className="text-right py-3 px-3 text-text-secondary font-medium">Trades</th>
-              <th className="text-right py-3 px-3 text-text-secondary font-medium">Avg Price</th>
-              <th className="text-right py-3 pl-3 text-text-secondary font-medium whitespace-nowrap">Buy Ratio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {symbolStats.map((stat, index) => (
-              <tr key={stat.symbol} className="border-b border-divider/50 hover:bg-bg-hover">
-                <td className="py-3 pr-4">
-                  <div className="flex items-center">
-                    <span className="text-xs bg-bg-accent text-text-secondary px-2 py-1 rounded mr-2">
-                      #{index + 1}
-                    </span>
-                    <span className="font-medium text-text-primary">{stat.symbol}</span>
-                  </div>
-                </td>
-                <td className="text-right py-3 px-3 text-text-primary font-medium">
-                  {formatCurrency(stat.totalVolume)}
-                </td>
-                <td className="text-right py-3 px-3 text-text-primary">
-                  {formatNumber(stat.tradeCount)}
-                </td>
-                <td className="text-right py-3 px-3 text-text-primary">
-                  {formatPrice(stat.averagePrice)}
-                </td>
-                <td className="text-right py-3 pl-3">
-                  <span className={`font-medium ${stat.buyRatio > 0.5 ? 'text-buy' : 'text-sell'}`}>
-                    {formatPercentage(stat.buyRatio)}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-text-primary">Symbol Performance</h3>
+        <div className="text-sm text-text-secondary">
+          {symbolStats.length} symbols
+        </div>
       </div>
+      
+      <div className="space-y-3">
+        {currentPageStats.map((stat, index) => (
+          <div
+            key={stat.symbol}
+            className="bg-bg-accent border border-border rounded-lg p-4 hover:bg-bg-hover transition-colors"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <span className="text-xs bg-bg-primary text-text-secondary px-2 py-1 rounded mr-2">
+                  #{startIdx + index + 1}
+                </span>
+                <span className="font-semibold text-text-primary">{stat.symbol}</span>
+              </div>
+              <span className={`text-sm font-bold ${stat.buyRatio > 0.5 ? 'text-buy' : 'text-sell'}`}>
+                {formatPercentage(stat.buyRatio)}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <div className="text-text-muted">Volume</div>
+                <div className="text-text-primary font-medium">{formatCurrency(stat.totalVolume)}</div>
+              </div>
+              <div>
+                <div className="text-text-muted">Trades</div>
+                <div className="text-text-primary font-medium">{formatNumber(stat.tradeCount)}</div>
+              </div>
+              <div>
+                <div className="text-text-muted">Avg Price</div>
+                <div className="text-text-primary font-medium">{formatPrice(stat.averagePrice)}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4 pt-4 border-t border-divider">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="px-3 py-1.5 text-xs bg-bg-accent text-text-primary rounded border border-border hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Previous
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            <span className="text-xs text-text-secondary">
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
+          
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1.5 text-xs bg-bg-accent text-text-primary rounded border border-border hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   )
 }

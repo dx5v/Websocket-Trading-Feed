@@ -108,18 +108,8 @@ wss.on('connection', (ws, request) => {
   // Add client to set
   clients.add(ws);
 
-  // Send initial welcome message with server info
-  const welcomeMessage = {
-    type: 'server_info',
-    message: 'Connected to Trade Feed Server',
-    symbols: SYMBOLS.map(s => s.symbol),
-    exchanges: EXCHANGES,
-    timestamp: Date.now()
-  };
-  
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(welcomeMessage));
-  }
+  // Skip welcome message to avoid parsing errors in the client
+  // The client expects only trade messages
 
   // Send initial burst of trades
   for (let i = 0; i < 3; i++) {
