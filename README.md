@@ -1,16 +1,19 @@
 # Live Trade Feed Dashboard
 
-A real-time cryptocurrency trade feed dashboard built with Next.js, TypeScript, and WebSockets. Features live statistics, filtering, sorting, and symbol performance analysis.
+A production-ready cryptocurrency trade feed dashboard built with Next.js, TypeScript, and WebSockets. Features real-time data streaming, automatic reconnection, advanced analytics, and a professional dark-themed UI.
 
 ## Features
 
 - **Real-time WebSocket Integration**: Connect to any WebSocket endpoint to stream live trade data
-- **Live Statistics**: Total trades, buy volume, buy/sell counts
-- **Advanced Filtering**: Filter by symbol, side (buy/sell), and exchange
+- **Automatic Reconnection**: Smart reconnection with exponential backoff (1s, 2s, 4s... max 30s)
+- **Live Statistics Panel**: Real-time metrics including total trades, buy volume, and buy/sell counts
+- **Advanced Filtering**: Filter trades by symbol, side (buy/sell), and exchange
 - **Flexible Sorting**: Sort trades by price, timestamp, size, or symbol
-- **Symbol Performance**: Top performing symbols with volume and trade statistics
-- **Paginated Trade Panel**: Efficiently display large numbers of trades
-- **Dark Theme**: Professional financial UI with accessibility features
+- **Symbol Performance Cards**: Visual cards showing top performers with pagination
+- **Paginated Trade Panel**: Efficiently display large volumes of trades with 20 per page
+- **Dark Theme**: Professional financial UI with carefully crafted color scheme
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Type-Safe**: Full TypeScript implementation with proper type definitions
 
 ## Trade Data Format
 
@@ -48,8 +51,9 @@ The application expects WebSocket messages in the following format:
 4. **Open the application**:
    Navigate to `http://localhost:3000`
 
-5. **Connect to the mock server**:
-   - Enter WebSocket URL: `ws://localhost:8080`
+5. **Connect to WebSocket server**:
+   - Default URL: `wss://websocket-trading-feed.onrender.com` (production server)
+   - Local URL: `ws://localhost:8080` (when running mock server)
    - Click "Connect" to start receiving live trade data
 
 ## Mock WebSocket Server
@@ -66,9 +70,8 @@ Run the mock server with: `npm run mock-server`
 
 ## Example WebSocket URLs
 
-- **Mock Server**: `ws://localhost:8080` (when running mock server)
-- **Binance BTC/USDT**: `wss://stream.binance.com:9443/ws/btcusdt@trade`
-- **Binance ETH/USDT**: `wss://stream.binance.com:9443/ws/ethusdt@trade`
+- **Production Server**: `wss://websocket-trading-feed.onrender.com` (default, always available)
+- **Local Mock Server**: `ws://localhost:8080` (when running mock server locally)
 
 ## Tech Stack
 
@@ -82,21 +85,25 @@ Run the mock server with: `npm run mock-server`
 
 ```
 ├── app/
-│   ├── globals.css          # Global styles and CSS variables
+│   ├── globals.css          # Global styles with dark theme
 │   ├── layout.tsx           # Root layout component
 │   └── page.tsx             # Main dashboard page
 ├── components/
-│   ├── StatisticsPanel.tsx  # Live trade statistics
-│   ├── TradeFilters.tsx     # Filter and sort controls
-│   ├── SymbolPerformance.tsx # Symbol performance analysis
-│   ├── TradePanel.tsx       # Paginated trade list
-│   └── WebSocketControls.tsx # WebSocket connection controls
+│   ├── StatisticsPanel.tsx  # Live trade statistics with auto-updating metrics
+│   ├── TradeFilters.tsx     # Advanced filter and sort controls
+│   ├── SymbolPerformance.tsx # Symbol cards with pagination (5 per page)
+│   ├── TradePanel.tsx       # Paginated trade table (20 per page)
+│   └── WebSocketControls.tsx # Connection management with status indicators
 ├── hooks/
-│   └── useWebSocket.ts      # WebSocket state management
+│   └── useWebSocket.ts      # WebSocket with auto-reconnection logic
 ├── types/
-│   └── trade.ts             # TypeScript type definitions
-├── mock-ws-server.js        # Mock WebSocket server
-└── README.md
+│   └── trade.ts             # TypeScript interfaces for type safety
+├── websocket-server/        # Production WebSocket server for Render.com
+│   ├── server.js            # WebSocket server with broadcasting
+│   ├── package.json         # Server dependencies
+│   └── render.yaml          # Render.com deployment config
+├── mock-ws-server.js        # Local development WebSocket server
+└── README.md                # This file
 ```
 
 ## Available Scripts
@@ -107,36 +114,43 @@ Run the mock server with: `npm run mock-server`
 - `npm run lint` - Run ESLint
 - `npm run mock-server` - Start mock WebSocket server
 
-## Development Workflow
+## Key Features Explained
 
-1. Start the mock server: `npm run mock-server`
-2. Start the Next.js app: `npm run dev`
-3. Connect to `ws://localhost:8080` in the app
-4. Watch live trade data flow through the dashboard
+### Automatic Reconnection
+The WebSocket connection includes smart reconnection logic:
+- Exponential backoff: 1s → 2s → 4s → 8s → 16s → max 30s
+- Distinguishes between manual disconnects and connection drops
+- Shows reconnection status in the UI
+- Prevents reconnection during component unmount
 
-## Deployment
+### Symbol Performance Cards
+- Displays top 10 symbols by volume
+- Paginated view with 5 symbols per page
+- Shows volume, trade count, average price, and buy/sell ratio
+- Visual indicators for bullish (green) or bearish (red) sentiment
 
-Deploy easily to Vercel:
+### Trade Panel
+- Real-time trade feed with 20 trades per page
+- Color-coded buy (green) and sell (red) indicators
+- Formatted timestamps, prices, and volumes
+- Proper column spacing for readability
 
-```bash
-vercel deploy
-```
-
-Or any other platform that supports Next.js applications.
+### Live Statistics
+- Updates in real-time as trades arrive
+- Formatted numbers (K for thousands, M for millions)
+- Buy volume in USD
+- Separate buy and sell counts
 
 ## Configuration
 
-The application uses Tailwind CSS custom colors defined in `tailwind.config.js`. The dark theme colors are:
+The application uses a carefully designed dark theme:
 
-- Background: `#0F1115`
-- Surface: `#1A1D23`
-- Buy color: `#00C896`
-- Sell color: `#FF5F5F`
-
-## Browser Support
-
-- Modern browsers with WebSocket support
-- Chrome, Firefox, Safari, Edge (latest versions)
+- **Background**: `#0F1115` - Deep dark blue
+- **Surface**: `#1A1D23` - Card backgrounds
+- **Buy/Green**: `#00C896` - Positive actions
+- **Sell/Red**: `#FF5F5F` - Negative actions
+- **Text Primary**: `#F0F3F8` - Main text
+- **Text Secondary**: `#A6B0C3` - Muted text
 
 ## License
 
